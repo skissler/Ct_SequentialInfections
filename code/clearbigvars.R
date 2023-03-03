@@ -1,0 +1,5 @@
+rm(fitlist)
+rm(fitlist_chain)
+rm(indiv_data)
+rm(ct_fit)
+rm(params_indiv)
