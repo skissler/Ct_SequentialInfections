@@ -26,12 +26,14 @@ This repository accompanies the manuscript "Viral kinetics of sequential SARS-Co
 - [ ] Complete reporting summary 
 - [ ] Note in cover letter that sex/gender data were not systematically collected and so not analyzed 
 
+
 - [ ] Find a way to make the comparisons even more concrete... 
 - [ ] Generate schematic to summarize the overall conclusions in the various groups 
 - [ ] Check if there is a relationship between the number of exposures and the clearance rate 
 - [ ] Describe statistical models in full, including: the form of the model, the parameters that are estimated, and the priors. Also: which Ct values were below LOD? How were these treated? Consider incorporating these rather than fully excluding them. 
 - [ ] Clarify that the pairwise clearance analysis really is just Spearman correlation. Maybe reduce some of the explanatory text there. Consider using standard approaches to calculate the p-value rather than bootstrapping. 
 - [ ] Consider including the clearance time consistency in the model itself, or at least including uncertainty in the clearance time estimates in the spearman correlation. 
+
 
 - [ ] Re-phrase the caption in figure 1: "I would suggest to rephrase it and say "no well-documented pre-Omicron infection" or something similar"
 - [ ] Come up with a simplified representation of the comparison groups and present it as Fig 1 panel C (fits in with a previous comment too) - because Supp Table 1 is too confusing. 
@@ -41,6 +43,7 @@ This repository accompanies the manuscript "Viral kinetics of sequential SARS-Co
 - [ ] Ask Joseph about standard curve stability over time 
 - [ ] Note brackets in Supp Table 2 are 95% CIs. 
 - [ ] Note in the Discussion/limitations that we didn't measure infectious virus. 
+
 
 - [ ] Clarify "summary of recorded infections" since Supp Table 1 is hard to read. 
 - [ ] Clarify who is being compared in lines 90-96 
