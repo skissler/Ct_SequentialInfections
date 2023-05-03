@@ -9,6 +9,17 @@ library(scales)
 
 ct_dat_refined <- read_csv("data/ct_dat_refined.csv")
 
+# Append a column to mark people with two well-documented infections:
+WD2set <- ct_dat_refined %>% 
+	group_by(InfectionEvent) %>% 
+	slice(1) %>% 
+	group_by(PersonID) %>% 
+	summarise(NWD=n()) %>% 
+	filter(NWD>1) %>% 
+	pull(PersonID)
+ct_dat_refined <- ct_dat_refined %>% 
+	mutate(WD2=case_when(PersonID%in%WD2set~1,TRUE~0))
+
 source('code/utils.R')
 source('code/utils_private.R')
 source("code/set_global_pars.R")

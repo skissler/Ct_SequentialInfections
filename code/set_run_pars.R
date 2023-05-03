@@ -230,6 +230,9 @@ run_pars_list <- list(
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
 		fpmean=1/log(10)
-		)
+		),
+	# 7) Measure raw differences between 1st and 2nd infections, restricting to the people with two well-documented infections
+	# 8) Measure differences in second infection kinetics stratified by the first infection lineage, in people with two well-documented infections. 
+	# 9) Measure differences in 2nd infections by vaccination status, in people with two well-documented infections 
 	)
 
