@@ -208,7 +208,7 @@ run_pars_list <- list(
 				filter(InterveningDose==1) %>% 
 				pull(RowID))
 			), 
-		adjustment_rows=list(
+		adjustment_rows=list(list(
 			(ct_dat_refined %>% 
 				filter(AgeGrp=="[0,30)") %>% 
 				pull(RowID)),
@@ -218,11 +218,11 @@ run_pars_list <- list(
 			(ct_dat_refined %>% 
 				filter(AgeGrp=="[50,100)") %>% 
 				pull(RowID))
-			), # NULL
+			)), # NULL
 		analysis_names=c("First Infection, unvaccinated","First infection, vaccinated","Second Infection, no intervening dose", "Second infection, intervening dose"), 
 		analysis_title="first vs. second infection with vaccination status", 
-		adjustment_names=c("0-29","30-49","50+"), 
-		adjustment_title="age group", 
+		adjustment_names=list(c("0-29","30-49","50+")), 
+		adjustment_title=c("age group"), 
 		tp_prior=c(0,2),
 		dp_midpoint=20,
 		wp_midpoint=5,
