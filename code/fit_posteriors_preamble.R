@@ -15,10 +15,17 @@ cat_df <- run_pars$analysis_rows %>%
 
 if(length(run_pars$adjustment_rows)>0){
 		adj_df <- run_pars$adjustment_rows %>% 
-			imap(~ tibble(adj=.y,RowID=.x)) %>% 
-			bind_rows() 	
+			map(~ imap(., ~ tibble(adj=.y,RowID=.x))) %>% 
+			map(~ bind_rows(.)) %>% 
+			bind_rows(.id="adjvar") %>% 
+			mutate(adjvar=paste0("adj",adjvar)) %>% 
+			pivot_wider(names_from=adjvar, values_from=adj)
+		# adj_df <- run_pars$adjustment_rows %>% 
+		# 	imap(~ tibble(adj=.y,RowID=.x)) %>% 
+		# 	bind_rows() 
 	} else {
-		adj_df <- tibble(adj=1, RowID=ct_dat_refined$RowID)
+		adj_df <- tibble(RowID=ct_dat_refined$RowID, adj1=1)
+		# adj_df <- tibble(adj=1, RowID=ct_dat_refined$RowID)
 	}
 
 indiv_data <- ct_dat_refined %>% 
@@ -32,7 +39,7 @@ indiv_data <- ct_dat_refined %>%
 	clean_infection_events() %>%
 	mutate(id_clean=InfectionEventClean) %>% 
 	ungroup() %>% 
-	select(id, id_clean, t, y, category, adj) %>% 
+	select(id, id_clean, t, y, category, starts_with("adj")) %>% 
 	arrange(id_clean, t)
 
 # Store the number of infection events we've kept: 
@@ -48,9 +55,16 @@ catlist <- indiv_data %>%
 adjlist <- indiv_data %>%
 	group_by(id) %>%
 	slice(1) %>%
-	select(id, adj) %>%
-	arrange(id) %>%
-	pull(adj)
+	select(id, starts_with("adj")) %>%
+	pivot_longer(-id) %>% 
+	split(.$name) %>% 
+	map(~ arrange(.,id)) %>% 
+	map(~ pull(., value))
+
+adjmat <- matrix(nrow=length(adjlist[[1]]), ncol=length(adjlist))
+for(indexA in 1:length(adjlist)){
+	adjmat[,indexA] <- adjlist[[indexA]]
+}
 
 prior_pars <- list(
 	tp_prior=run_pars$tp_prior,
@@ -62,7 +76,7 @@ prior_pars <- list(
 	fpmean=run_pars$fpmean,		# so that 90% of mass is <1 and 99% is <2
 	category=catlist,
 	max_category=max(catlist),
-	adjust=adjlist,
-	max_adjust=max(adjlist)
+	adjust=adjmat,
+	max_adjust=max(max(adjmat))
 )	
 

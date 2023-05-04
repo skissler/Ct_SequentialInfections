@@ -21,7 +21,7 @@ This repository accompanies the manuscript "Viral kinetics of sequential SARS-Co
 
 ## Reviews
 
-- [ ] Conduct restricted analysis, considdering only individuals with well-documented first and second infections 
+- [ ] Conduct restricted analysis, considering only individuals with well-documented first and second infections 
 - [ ] Complete editorial policy checklist
 - [ ] Complete reporting summary 
 - [ ] Note in cover letter that sex/gender data were not systematically collected and so not analyzed 

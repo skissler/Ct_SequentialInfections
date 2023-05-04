@@ -33,24 +33,40 @@ ggsave(fig_dphist, file=paste0(savedir,"dphist.png"), width=stdwidth, height=1.1
 ggsave(fig_dphist + striplegend, file=paste0(savedir,"dphist_nolegend.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
 ggsave(fig_dphist + striplegend, file=paste0(savedir,"dphist_nolegend.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
 
-ggsave(fig_dphist_adjust, file=paste0(savedir,"dphist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
-ggsave(fig_dphist_adjust, file=paste0(savedir,"dphist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+
+for(indexA in 1:length(fig_dphist_adjust)){
+	ggsave(fig_dphist_adjust[[indexA]], file=paste0(savedir,paste0("dphist_adjust_",indexA,".pdf")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+	ggsave(fig_dphist_adjust[[indexA]], file=paste0(savedir,paste0("dphist_adjust_",indexA,".png")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+}
+
+for(indexA in 1:length(fig_wphist_adjust)){
+	ggsave(fig_wphist_adjust[[indexA]], file=paste0(savedir,paste0("wphist_adjust_",indexA,".pdf")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+	ggsave(fig_wphist_adjust[[indexA]], file=paste0(savedir,paste0("wphist_adjust_",indexA,".png")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+}
+
+for(indexA in 1:length(fig_wrhist_adjust)){
+	ggsave(fig_wrhist_adjust[[indexA]], file=paste0(savedir,paste0("wrhist_adjust_",indexA,".pdf")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+	ggsave(fig_wrhist_adjust[[indexA]], file=paste0(savedir,paste0("wrhist_adjust_",indexA,".png")), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+}
+
+# ggsave(fig_dphist_adjust, file=paste0(savedir,"dphist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+# ggsave(fig_dphist_adjust, file=paste0(savedir,"dphist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
 
 ggsave(fig_wphist, file=paste0(savedir,"wphist.pdf"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wphist, file=paste0(savedir,"wphist.png"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wphist+striplegend, file=paste0(savedir,"wphist_nolegend.pdf"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wphist+striplegend, file=paste0(savedir,"wphist_nolegend.png"), width=stdwidth, height=stdheight, dpi=stddpi)
 
-ggsave(fig_wphist_adjust, file=paste0(savedir,"wphist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
-ggsave(fig_wphist_adjust, file=paste0(savedir,"wphist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+# ggsave(fig_wphist_adjust, file=paste0(savedir,"wphist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+# ggsave(fig_wphist_adjust, file=paste0(savedir,"wphist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
 
 ggsave(fig_wrhist, file=paste0(savedir,"wrhist.pdf"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wrhist, file=paste0(savedir,"wrhist.png"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wrhist+striplegend, file=paste0(savedir,"wrhist_nolegend.pdf"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_wrhist+striplegend, file=paste0(savedir,"wrhist_nolegend.png"), width=stdwidth, height=stdheight, dpi=stddpi)
 
-ggsave(fig_wrhist_adjust, file=paste0(savedir,"wrhist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
-ggsave(fig_wrhist_adjust, file=paste0(savedir,"wrhist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+# ggsave(fig_wrhist_adjust, file=paste0(savedir,"wrhist_adjust.pdf"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
+# ggsave(fig_wrhist_adjust, file=paste0(savedir,"wrhist_adjust.png"), width=stdwidth, height=1.1*stdheight, dpi=stddpi)
 
 ggsave(fig_rphist, file=paste0(savedir,"rphist.pdf"), width=stdwidth, height=stdheight, dpi=stddpi)
 ggsave(fig_rphist, file=paste0(savedir,"rphist.png"), width=stdwidth, height=stdheight, dpi=stddpi)

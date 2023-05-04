@@ -11,17 +11,24 @@ fitlist_chain <- extract(ct_fit, pars=c("log_dpadj[2]","log_wpadj[2]"), permuted
 
 categorylabs <- run_pars$analysis_names
 categorylabsdf <- tibble(label=categorylabs, id=1:length(categorylabs)) %>% 
-		mutate(label=factor(label,levels=categorylabs))
+		mutate(label=factor(label,levels=categorylabs)) %>% 
+		mutate(id=as.character(id))
 categorytitle <- run_pars$analysis_title
 categorycolors <- c("#000000","#4053d3","#ddb310","#b51d14","#00beff","#fb49b0","#00b25d","#cacaca")[1:length(run_pars$analysis_rows)]
 categorytags <- c("A)","B)","C)","D)","E)","F)","G)","H)","I)","J)","K)","L)","M)","N)","O)","P)")[1:length(run_pars$analysis_rows)]
 
 adjustmentlabs <- run_pars$adjustment_names
-adjustmentlabsdf <- tibble(label=adjustmentlabs, id=1:length(adjustmentlabs)) %>% 
-		mutate(label=factor(label,levels=adjustmentlabs))
+adjustmentlabsdf <- adjustmentlabs %>% 
+	map(~ tibble(label=factor(.,levels=.), adjcat=1:length(.))) %>% 
+	bind_rows(.id="adjvar") %>% 
+	mutate(adjvar=as.numeric(adjvar)) %>% 
+	select(adjvar, adjcat, label)
+# adjustmentlabsdf <- tibble(label=adjustmentlabs, id=1:length(adjustmentlabs)) %>% 
+# 		mutate(label=factor(label,levels=adjustmentlabs))
+# adjustmenttitledf <- tibble(title=run_pars$adjustment_title, adjvar=1:length(run_pars$adjustment_title))
 adjustmenttitle <- run_pars$adjustment_title
-adjustmentcolors <- c("#000000","#4053d3","#ddb310","#b51d14","#00beff","#fb49b0","#00b25d","#cacaca")[1:length(run_pars$adjustment_rows)]
-adjustmenttags <- c("A)","B)","C)","D)","E)","F)","G)","H)","I)","J)","K)","L)","M)","N)","O)","P)")[1:length(run_pars$adjustment_rows)]
+adjustmentcolors <- c("#000000","#4053d3","#ddb310","#b51d14","#00beff","#fb49b0","#00b25d","#cacaca")[1:max(adjustmentlabsdf$adjcat)]
+adjustmenttags <- c("A)","B)","C)","D)","E)","F)","G)","H)","I)","J)","K)","L)","M)","N)","O)","P)")[1:max(adjustmentlabsdf$adjcat)]
 
 idmap <- indiv_data %>% 
 	group_by(id) %>% 
@@ -32,14 +39,15 @@ params_indiv <- get_wide_output(fitlist, c("tp","dp","wp","wr")) %>%
 	left_join((indiv_data %>% 
 			group_by(id_clean) %>% 
 			slice(1) %>% 
-			select(id_clean, category, adjustment=adj)),
+			select(id_clean, category, starts_with("adj"))),
 		by=c("id"="id_clean")) %>% 
 	rename(id_clean=id) %>% 
 	left_join(idmap, by="id_clean")
 
 meanvals_indiv <- params_indiv %>% 
 	group_by(id) %>% 
-	summarise(tp=mean(tp),dp=mean(dp),wp=mean(wp),wr=mean(wr),category=first(category), adjustment=first(adjustment)) %>% 
+	# summarise(tp=mean(tp),dp=mean(dp),wp=mean(wp),wr=mean(wr),category=first(category), adjustment=first(adjustment)) %>% 
+	summarise(tp=mean(tp),dp=mean(dp),wp=mean(wp),wr=mean(wr),category=first(category), across(starts_with("adj"),first)) %>% 
 	left_join(
 		(ct_dat_refined %>% 
 			group_by(InfectionEvent) %>% 
@@ -65,7 +73,7 @@ summaryvals_indiv <- params_indiv %>%
 		wr_lwr=quantile(wr,0.025),
 		wr_upr=quantile(wr,0.975),
 		category=first(category),
-		adjustment=first(adjustment)) %>% 
+		across(starts_with("adj"),first)) %>% 
 	rename(id_clean=id) %>% 
 	left_join((indiv_data %>% 
 			select(id,id_clean) %>% 
@@ -236,7 +244,6 @@ postdf_wr <- get_long_output(fitlist,c("log_wr_mean")) %>%
 	mutate(post_wr=exp(log_mean+log_adj)*(run_pars$wr_midpoint)) %>% 
 	select(iteration, id, post_wr)
 
-
 postdf_dp_adjust <- get_long_output(fitlist,c("log_dp_mean")) %>% 
 	rename(log_mean=value) %>% 
 	select(-name, -id) %>% 
@@ -322,40 +329,6 @@ fig_wrhist <- postdf_wr %>%
 		theme(text=element_text(size=9), legend.title=element_blank()) + 
 		labs(title=paste0("Clearance time by ",categorytitle), x="Clearance time (days)", y="Density")
 
-fig_dphist_adjust <- postdf_dp_adjust %>% 
-	left_join(adjustmentlabsdf, by="id") %>% 
-	ggplot() + 
-		geom_histogram(aes(x=global_pars[["lod"]]-post_dp, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
-		geom_density(aes(x=global_pars[["lod"]]-post_dp, col=label), adjust=2) +
-		scale_x_reverse(sec.axis=sec_axis(~convert_Ct_logGEML(.), name="log10 RNA copies per ml")) + 
-		scale_color_manual(values=adjustmentcolors) + 
-		scale_fill_manual(values=adjustmentcolors) + 
-		theme_classic() + 
-		theme(text=element_text(size=9), legend.title=element_blank()) + 
-		labs(title=paste0("Peak Ct by ",adjustmenttitle), x="Ct", y="Density")
-
-fig_wphist_adjust <- postdf_wp_adjust %>% 
-	left_join(adjustmentlabsdf, by="id") %>% 
-	ggplot() + 
-		geom_histogram(aes(x=post_wp, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
-		geom_density(aes(x=post_wp, col=label), adjust=2) +
-		scale_color_manual(values=adjustmentcolors) + 
-		scale_fill_manual(values=adjustmentcolors) + 
-		theme_classic() + 
-		theme(text=element_text(size=9), legend.title=element_blank()) + 
-		labs(title=paste0("Proliferation time by ",adjustmenttitle), x="Proliferation time (days)", y="Density")
-
-fig_wrhist_adjust <- postdf_wr_adjust %>% 
-	left_join(adjustmentlabsdf, by="id") %>% 
-	ggplot() + 
-		geom_histogram(aes(x=post_wr, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
-		geom_density(aes(x=post_wr, col=label), adjust=2) +
-		scale_color_manual(values=adjustmentcolors) + 
-		scale_fill_manual(values=adjustmentcolors) + 
-		theme_classic() + 
-		theme(text=element_text(size=9), legend.title=element_blank()) + 
-		labs(title=paste0("Clearance time by ",adjustmenttitle), x="Clearance time (days)", y="Density")
-
 fig_rphist <- postdf_rp %>% 
 	left_join(categorylabsdf, by="id") %>% 
 	ggplot() + 
@@ -377,6 +350,58 @@ fig_rrhist <- postdf_rr %>%
 		theme_classic() + 
 		theme(text=element_text(size=9), legend.title=element_blank()) + 
 		labs(title=paste0("Clearance rate by ",categorytitle), x="Clearance rate (Ct/day)", y="Density")
+
+
+fig_dphist_adjust <- postdf_dp_adjust %>% 
+	separate(id, into=c("adjvar","adjcat")) %>% 
+	left_join(mutate(adjustmentlabsdf,adjvar=as.character(adjvar),adjcat=as.character(adjcat)), by=c("adjvar","adjcat")) %>% 
+	filter(!is.na(label)) %>% 
+	split(.$adjvar) %>% 
+	imap(~ 
+	(ggplot(.x) + 
+			geom_histogram(aes(x=global_pars[["lod"]]-post_dp, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
+			geom_density(aes(x=global_pars[["lod"]]-post_dp, col=label), adjust=2) +
+			scale_x_reverse(sec.axis=sec_axis(~convert_Ct_logGEML(.), name="log10 RNA copies per ml")) + 
+			scale_color_manual(values=adjustmentcolors) + 
+			scale_fill_manual(values=adjustmentcolors) + 
+			theme_classic() + 
+			theme(text=element_text(size=9), legend.title=element_blank()) + 
+			labs(title=paste0("Peak Ct by ",adjustmenttitle[as.numeric(.y)]), x="Ct", y="Density"))
+	)
+
+fig_wphist_adjust <- postdf_wp_adjust %>% 
+	separate(id, into=c("adjvar","adjcat")) %>% 
+	left_join(mutate(adjustmentlabsdf,adjvar=as.character(adjvar),adjcat=as.character(adjcat)), by=c("adjvar","adjcat")) %>% 
+	filter(!is.na(label)) %>% 
+	split(.$adjvar) %>% 
+	imap(~ 
+	(ggplot(.x) + 
+			geom_histogram(aes(x=post_wp, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
+			geom_density(aes(x=post_wp, col=label), adjust=2) +
+			scale_color_manual(values=adjustmentcolors) + 
+			scale_fill_manual(values=adjustmentcolors) + 
+			theme_classic() + 
+			theme(text=element_text(size=9), legend.title=element_blank()) + 
+			labs(title=paste0("Proliferation time by ",adjustmenttitle[as.numeric(.y)]), x="Proliferation time (days)", y="Density"))
+	)
+
+fig_wrhist_adjust <- postdf_wr_adjust %>% 
+	separate(id, into=c("adjvar","adjcat")) %>% 
+	left_join(mutate(adjustmentlabsdf,adjvar=as.character(adjvar),adjcat=as.character(adjcat)), by=c("adjvar","adjcat")) %>% 
+	filter(!is.na(label)) %>% 
+	split(.$adjvar) %>% 
+	imap(~ 
+	(ggplot(.x) + 
+			geom_histogram(aes(x=post_wr, fill=label, y=..density..), alpha=0.4, position="identity", bins=50) + 
+			geom_density(aes(x=post_wr, col=label), adjust=2) +
+			scale_color_manual(values=adjustmentcolors) + 
+			scale_fill_manual(values=adjustmentcolors) + 
+			theme_classic() + 
+			theme(text=element_text(size=9), legend.title=element_blank()) + 
+			labs(title=paste0("Clearance time by ",adjustmenttitle[as.numeric(.y)]), x="Clearance time (days)", y="Density"))
+	)
+
+
 
 # =============================================================================
 # Trajectory summaries 
@@ -441,7 +466,7 @@ boundsdown <- lapply(min(postdf_overall$id):max(postdf_overall$id),
 fig_viztrajectories <- indiv_data %>% 
 	select(id_clean, t, y, category) %>% 
 	filter(y<40) %>% 
-	left_join(tpdf, by="id_clean") %>%  
+	left_join(mutate(tpdf,id_clean=as.numeric(id_clean)), by="id_clean") %>%  
 	mutate(t=t-tp) %>% 
 	split(.$category) %>% 
 	imap(~ ggplot(.x, aes(x=t, y=y)) + 
@@ -468,7 +493,7 @@ for(indexA in 1:length(fig_viztrajectories)){
 fig_viztrajectories_grey <- indiv_data %>% 
 	select(id_clean, t, y, category) %>% 
 	filter(y<40) %>% 
-	left_join(tpdf, by="id_clean") %>%  
+	left_join(mutate(tpdf,id_clean=as.numeric(id_clean)), by="id_clean") %>%  
 	mutate(t=t-tp) %>% 
 	split(.$category) %>% 
 	imap(~ ggplot(.x, aes(x=t, y=y)) + 
@@ -503,7 +528,7 @@ fig_viztrajectories_varcol <- indiv_data %>%
 	left_join(varmap) %>% 
 	select(id_clean, t, y, category, LineageBroad) %>% 
 	filter(y<40) %>% 
-	left_join(tpdf, by="id_clean") %>%  
+	left_join(mutate(tpdf,id_clean=as.numeric(id_clean)), by="id_clean") %>%  
 	mutate(t=t-tp) %>% 
 	split(.$category) %>% 
 	imap(~ ggplot(.x, aes(x=t, y=y)) + 
@@ -540,10 +565,10 @@ fig_dp_whiskers <- meanvals_indiv %>%
 	select(dp, id=category) %>% 
 	ggplot(aes(x=factor(id), col=factor(id), y=global_pars[["lod"]]-dp)) + 
 		geom_beeswarm(size=pointsize, alpha=alphabee, cex=1.2) + 
-		geom_segment(data=postdf_overall_summary, aes(x=id, xend=id, y=global_pars[["lod"]]-post_dp_lwr, yend=global_pars[["lod"]]-post_dp_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=global_pars[["lod"]]-post_dp_lwr, yend=global_pars[["lod"]]-post_dp_lwr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=global_pars[["lod"]]-post_dp_upr, yend=global_pars[["lod"]]-post_dp_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-1.2*whiskerwidth, xend=id+1.2*whiskerwidth, y=global_pars[["lod"]]-post_dp_mean, yend=global_pars[["lod"]]-post_dp_mean), col="black", size=whiskersize) +
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id), xend=as.numeric(id), y=global_pars[["lod"]]-post_dp_lwr, yend=global_pars[["lod"]]-post_dp_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=global_pars[["lod"]]-post_dp_lwr, yend=global_pars[["lod"]]-post_dp_lwr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=global_pars[["lod"]]-post_dp_upr, yend=global_pars[["lod"]]-post_dp_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-1.2*whiskerwidth, xend=as.numeric(id)+1.2*whiskerwidth, y=global_pars[["lod"]]-post_dp_mean, yend=global_pars[["lod"]]-post_dp_mean), col="black", size=whiskersize) +
 		scale_color_manual(values=categorycolors,guide="none") + 
 		scale_x_discrete(labels=categorylabs) + 
 		scale_y_reverse(sec.axis=sec_axis(~convert_Ct_logGEML(.), name="log10 RNA copies per ml")) + 
@@ -559,10 +584,10 @@ fig_wp_whiskers <- meanvals_indiv %>%
 	select(wp, id=category) %>% 
 	ggplot(aes(x=factor(id), col=factor(id), y=wp)) + 
 		geom_beeswarm(size=pointsize, alpha=alphabee, cex=0.8) + 
-		geom_segment(data=postdf_overall_summary, aes(x=id, xend=id, y=post_wp_lwr, yend=post_wp_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=post_wp_lwr, yend=post_wp_lwr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=post_wp_upr, yend=post_wp_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-1.2*whiskerwidth, xend=id+1.2*whiskerwidth, y=post_wp_mean, yend=post_wp_mean), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id), xend=as.numeric(id), y=post_wp_lwr, yend=post_wp_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=post_wp_lwr, yend=post_wp_lwr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=post_wp_upr, yend=post_wp_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-1.2*whiskerwidth, xend=as.numeric(id)+1.2*whiskerwidth, y=post_wp_mean, yend=post_wp_mean), col="black", size=whiskersize) +  
 		scale_color_manual(values=categorycolors,guide="none") + 
 		scale_x_discrete(labels=categorylabs) + 
 		# scale_y_reverse() + 
@@ -577,10 +602,10 @@ fig_wr_whiskers <- meanvals_indiv %>%
 	select(wr, id=category) %>% 
 	ggplot(aes(x=factor(id), col=factor(id), y=wr)) + 
 		geom_beeswarm(size=pointsize, alpha=alphabee, cex=1.0) + 
-		geom_segment(data=postdf_overall_summary, aes(x=id, xend=id, y=post_wr_lwr, yend=post_wr_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=post_wr_lwr, yend=post_wr_lwr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-whiskerwidth, xend=id+whiskerwidth, y=post_wr_upr, yend=post_wr_upr), col="black", size=whiskersize) +  
-		geom_segment(data=postdf_overall_summary, aes(x=id-1.2*whiskerwidth, xend=id+1.2*whiskerwidth, y=post_wr_mean, yend=post_wr_mean), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id), xend=as.numeric(id), y=post_wr_lwr, yend=post_wr_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=post_wr_lwr, yend=post_wr_lwr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-whiskerwidth, xend=as.numeric(id)+whiskerwidth, y=post_wr_upr, yend=post_wr_upr), col="black", size=whiskersize) +  
+		geom_segment(data=postdf_overall_summary, aes(x=as.numeric(id)-1.2*whiskerwidth, xend=as.numeric(id)+1.2*whiskerwidth, y=post_wr_mean, yend=post_wr_mean), col="black", size=whiskersize) +  
 		scale_color_manual(values=categorycolors,guide="none") + 
 		scale_x_discrete(labels=categorylabs) + 
 		# scale_y_reverse() + 
@@ -599,6 +624,7 @@ summdf_geml <- postdf_dp %>%
 	group_by(id) %>% 
 	summarise(mean=round(convert_Ct_logGEML(global_pars[["lod"]]-mean(post_dp)),1), lwr=round(convert_Ct_logGEML(global_pars[["lod"]]-quantile(post_dp,0.025)),1), upr=round(convert_Ct_logGEML(global_pars[["lod"]]-quantile(post_dp,0.975)),1)) %>% 
 	mutate(var="Peak GEML") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -607,6 +633,7 @@ summdf_ct <- postdf_dp %>%
 	group_by(id) %>% 
 	summarise(mean=round(global_pars[["lod"]]-mean(post_dp),1), lwr=round(global_pars[["lod"]]-quantile(post_dp,0.975),1), upr=round(global_pars[["lod"]]-quantile(post_dp,0.025),1)) %>% 
 	mutate(var="Peak Ct") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -615,6 +642,7 @@ summdf_wp <- postdf_wp %>%
 	group_by(id) %>% 
 	summarise(mean=round(mean(post_wp),1), lwr=round(quantile(post_wp,0.025),1), upr=round(quantile(post_wp,0.975),1)) %>% 
 	mutate(var="Proliferation time") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -623,6 +651,7 @@ summdf_wr <- postdf_wr %>%
 	group_by(id) %>% 
 	summarise(mean=round(mean(post_wr),1), lwr=round(quantile(post_wr,0.025),1), upr=round(quantile(post_wr,0.975),1)) %>% 
 	mutate(var="Clearance time") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -631,6 +660,7 @@ summdf_rp <- postdf_rp %>%
 	group_by(id) %>% 
 	summarise(mean=round(mean(post_rp),1), lwr=round(quantile(post_rp,0.025),1), upr=round(quantile(post_rp,0.975),1)) %>% 
 	mutate(var="Proliferation rate (Ct/day)") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -639,6 +669,7 @@ summdf_rr <- postdf_rr %>%
 	group_by(id) %>% 
 	summarise(mean=round(mean(post_rr),1), lwr=round(quantile(post_rr,0.025),1), upr=round(quantile(post_rr,0.975),1)) %>% 
 	mutate(var="Clearance rate (Ct/day)") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))
@@ -647,6 +678,7 @@ summdf_sm <- postdf_sm %>%
 	group_by(id) %>% 
 	summarise(mean=round(mean(post_sm),1), lwr=round(quantile(post_sm,0.025),1), upr=round(quantile(post_sm,0.975),1)) %>% 
 	mutate(var="Symmetry (proliferation/clearance)") %>% 
+	mutate(id=as.numeric(id)) %>% 
 	left_join(tibble(name=categorylabs, id=1:length(categorylabs)), by="id") %>% 
 	select(var,name,mean,lwr,upr) %>% 
 	mutate(string=paste0(mean," (",lwr,", ",upr,")"))

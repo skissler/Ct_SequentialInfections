@@ -29,7 +29,7 @@ source("code/set_run_pars.R")
 # Run the analysis
 # =============================================================================
 
-for(run_pars_index in 1:6){
+for(run_pars_index in 7:7){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 

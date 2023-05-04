@@ -27,16 +27,31 @@ get_long_output <- function(fitlist, nmvec, idname="id"){
 	}
 
 	nindiv <- dim(fitlist$tp)[2]
-	out <- tibble(name="",iteration=-Inf, id=-Inf, value=-Inf) 
+	out <- tibble(name="",iteration=-Inf, id=NA_character_, value=-Inf) 
 	for(nm in nmvec){
 
 		temp <- as_tibble(fitlist[[nm]], .name_repair="unique") 
-		names(temp) <- as.character(1:ncol(temp))
+		if(length(dim(fitlist[[nm]]))<=2){
+				names(temp) <- as.character(1:ncol(temp))		
+			} else if(length(dim(fitlist[[nm]]))==3){
+
+				names(temp) <- unlist(lapply(0:(ncol(temp)-1), function(x){
+					paste0(
+						1+floor(x/(ncol(temp)/dim(fitlist[[nm]])[3])),
+						".",
+						1+(x%%(ncol(temp)/dim(fitlist[[nm]])[3]))
+						)
+					}))
+
+			} else {
+				stop("Don't know how to parse an array of that size")
+			}
+		
 		temp <- temp %>% 
 			mutate(name=nm) %>% 
 			mutate(iteration=1:n()) %>% 
-			pivot_longer(-c("iteration","name"), names_to="id") %>% 
-			mutate(id=as.numeric(id)) 
+			pivot_longer(-c("iteration","name"), names_to="id") #%>% 
+			# mutate(id=as.numeric(id)) 
 
 		out <- bind_rows(out,temp)
 	}

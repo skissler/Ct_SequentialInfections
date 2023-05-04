@@ -10,7 +10,6 @@ functions {
   }
 }
 
-
 data{
   int<lower=0> N;           // Number of concatenated data points
   int<lower=0> n_id;       // Number of infections
@@ -18,8 +17,9 @@ data{
   int<lower=0> id[N];       // Vector marking which datum belongs to which id
   int<lower=0> category[n_id];  // Immune categories
   int<lower=0> max_category;     // Highest immune category
-  int<lower=0> adjust[n_id];  // Adjustment categories
-  int<lower=0> max_adjust;     // Highest adjustment category
+  int<lower=0> n_adj;        // Number of adjustment variables 
+  int<lower=0> adjust[n_id,n_adj];  // Adjustment categories
+  int<lower=0> max_adjust;     // Highest adjustment category, across all adjustment variables
   real t[N];                // Vector marking the time for each data point 
   real<lower=0, upper=lod> y[N]; // Concatenated data vector 
   real tp_prior[2];              // Prior sd for the onset time (days)
@@ -62,19 +62,19 @@ parameters{
   real log_dp_mean;
   real<lower = 0> log_dp_sd;
   real log_dpadj_cat_raw[max_category-1];
-  real log_dpadj_adjust_raw[max_adjust-1];
+  real log_dpadj_adjust_raw[max_adjust-1, n_adj];
   real dp_raw[n_id];
 
   real log_wp_mean;
   real<lower = 0> log_wp_sd;
   real log_wpadj_cat_raw[max_category-1];
-  real log_wpadj_adjust_raw[max_adjust-1];
+  real log_wpadj_adjust_raw[max_adjust-1, n_adj];
   real wp_raw[n_id];
 
   real log_wr_mean;
   real<lower = 0> log_wr_sd;
   real log_wradj_cat_raw[max_category-1];
-  real log_wradj_adjust_raw[max_adjust-1];
+  real log_wradj_adjust_raw[max_adjust-1, n_adj];
   real wr_raw[n_id];
 
   real<lower = 0> sigma;
@@ -90,38 +90,58 @@ transformed parameters{
   real log_dpadj[max_category];
   real log_wpadj[max_category];
   real log_wradj[max_category];
-  real log_dpadj_adjust[max_adjust];
-  real log_wpadj_adjust[max_adjust];
-  real log_wradj_adjust[max_adjust];
+  real log_dpadj_adjust[max_adjust,n_adj];
+  real log_wpadj_adjust[max_adjust,n_adj];
+  real log_wradj_adjust[max_adjust,n_adj];
   real mu[N];
   real zeroarray[1];
+  real zeroarray_adjust[1,n_adj];
+  real dpadj_add;
+  real wpadj_add;
+  real wradj_add;
 
   real num_arg[N,3];
 
   zeroarray[1] = 0;
+  for(i in 1:n_adj){
+    zeroarray_adjust[1,i] = 0;  
+  }
+  
   log_dpadj = append_array(zeroarray,log_dpadj_cat_raw);
   log_wpadj = append_array(zeroarray,log_wpadj_cat_raw);
   log_wradj = append_array(zeroarray,log_wradj_cat_raw);
 
-  log_dpadj_adjust = append_array(zeroarray,log_dpadj_adjust_raw);
-  log_wpadj_adjust = append_array(zeroarray,log_wpadj_adjust_raw);
-  log_wradj_adjust = append_array(zeroarray,log_wradj_adjust_raw);
+  log_dpadj_adjust = append_array(zeroarray_adjust,log_dpadj_adjust_raw);
+  log_wpadj_adjust = append_array(zeroarray_adjust,log_wpadj_adjust_raw);
+  log_wradj_adjust = append_array(zeroarray_adjust,log_wradj_adjust_raw);
 
   for(i in 1:n_id){
 
+    dpadj_add = 0;
+    wpadj_add = 0;
+    wradj_add = 0;
+    for(j in 1:n_adj){
+      dpadj_add = dpadj_add + log_dpadj_adjust[adjust[i,j],j];
+      wpadj_add = wpadj_add + log_wpadj_adjust[adjust[i,j],j];
+      wradj_add = wradj_add + log_wradj_adjust[adjust[i,j],j];
+    }
+
     dp[i] = exp(log_dp_mean + 
       log_dpadj[category[i]] + 
-      log_dpadj_adjust[adjust[i]] + 
+      // log_dpadj_adjust[adjust[i]] + 
+      dpadj_add + 
       log_dp_sd*dp_raw[i])*dp_midpoint;
 
     wp[i] = exp(log_wp_mean + 
       log_wpadj[category[i]] + 
-      log_wpadj_adjust[adjust[i]] + 
+      // log_wpadj_adjust[adjust[i]] + 
+      wpadj_add + 
       log_wp_sd*wp_raw[i])*wp_midpoint;
 
     wr[i] = exp(log_wr_mean + 
       log_wradj[category[i]] + 
-      log_wradj_adjust[adjust[i]] + 
+      // log_wradj_adjust[adjust[i]] + 
+      wradj_add + 
       log_wr_sd*wr_raw[i])*wr_midpoint;
 
   }
@@ -143,19 +163,26 @@ model{
   log_dp_mean ~ normal(0, 0.25); // hierarchical mean
   log_dp_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
   log_dpadj_cat_raw ~ normal(0, 0.25); 
-  log_dpadj_adjust_raw ~ normal(0, 0.25); 
+  for(indexA in 1:(max_adjust-1)){
+    log_dpadj_adjust_raw[indexA] ~ normal(0, 0.25);   
+  }
+  // log_dpadj_adjust_raw ~ normal(0, 0.25); 
   dp_raw ~ std_normal(); // for generating individual-level guesses 
 
   log_wp_mean ~ normal(0, 0.25); // hierarchical mean
   log_wp_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
   log_wpadj_cat_raw ~ normal(0, 0.25); 
-  log_wpadj_adjust_raw ~ normal(0, 0.25); 
+  for(indexA in 1:(max_adjust-1)){
+    log_wpadj_adjust_raw[indexA] ~ normal(0, 0.25); 
+  }
   wp_raw ~ std_normal(); // for generating individual-level guesses
 
   log_wr_mean ~ normal(0, 0.25); // hierarchical mean
   log_wr_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
   log_wradj_cat_raw ~ normal(0, 0.25); 
-  log_wradj_adjust_raw ~ normal(0, 0.25); 
+  for(indexA in 1:(max_adjust-1)){
+    log_wradj_adjust_raw[indexA] ~ normal(0, 0.25); 
+  }
   wr_raw ~ std_normal(); // for generating individual-level guesses
 
   sigma ~ normal(sigma_prior[1], sigma_prior[2]) T[0,]; // process noise sd 
