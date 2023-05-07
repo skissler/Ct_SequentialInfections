@@ -23,9 +23,6 @@ adjustmentlabsdf <- adjustmentlabs %>%
 	bind_rows(.id="adjvar") %>% 
 	mutate(adjvar=as.numeric(adjvar)) %>% 
 	select(adjvar, adjcat, label)
-# adjustmentlabsdf <- tibble(label=adjustmentlabs, id=1:length(adjustmentlabs)) %>% 
-# 		mutate(label=factor(label,levels=adjustmentlabs))
-# adjustmenttitledf <- tibble(title=run_pars$adjustment_title, adjvar=1:length(run_pars$adjustment_title))
 adjustmenttitle <- run_pars$adjustment_title
 adjustmentcolors <- c("#000000","#4053d3","#ddb310","#b51d14","#00beff","#fb49b0","#00b25d","#cacaca")[1:max(adjustmentlabsdf$adjcat)]
 adjustmenttags <- c("A)","B)","C)","D)","E)","F)","G)","H)","I)","J)","K)","L)","M)","N)","O)","P)")[1:max(adjustmentlabsdf$adjcat)]
@@ -46,7 +43,6 @@ params_indiv <- get_wide_output(fitlist, c("tp","dp","wp","wr")) %>%
 
 meanvals_indiv <- params_indiv %>% 
 	group_by(id) %>% 
-	# summarise(tp=mean(tp),dp=mean(dp),wp=mean(wp),wr=mean(wr),category=first(category), adjustment=first(adjustment)) %>% 
 	summarise(tp=mean(tp),dp=mean(dp),wp=mean(wp),wr=mean(wr),category=first(category), across(starts_with("adj"),first)) %>% 
 	left_join(
 		(ct_dat_refined %>% 

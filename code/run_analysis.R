@@ -13,10 +13,13 @@ ct_dat_refined <- read_csv("data/ct_dat_refined.csv")
 WD2set <- ct_dat_refined %>% 
 	group_by(InfectionEvent) %>% 
 	slice(1) %>% 
+	mutate(Has1=case_when(InfNum==1~1, TRUE~0)) %>% 
+	mutate(Has2=case_when(InfNum==2~1, TRUE~0)) %>% 
 	group_by(PersonID) %>% 
-	summarise(NWD=n()) %>% 
-	filter(NWD>1) %>% 
-	pull(PersonID)
+	summarise(Has1=sum(Has1), Has2=sum(Has2)) %>% 
+	mutate(PullIndex=Has1+Has2) %>% 
+	filter(PullIndex==2) %>% 
+	pull(PersonID)	
 ct_dat_refined <- ct_dat_refined %>% 
 	mutate(WD2=case_when(PersonID%in%WD2set~1,TRUE~0))
 
@@ -29,7 +32,7 @@ source("code/set_run_pars.R")
 # Run the analysis
 # =============================================================================
 
-for(run_pars_index in 10:10){
+for(run_pars_index in 8:10){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 
@@ -52,7 +55,7 @@ for(run_pars_index in 10:10){
 # Individual-level comparisons (Spearman correlations)
 # =============================================================================
 
-for(run_pars_index in 2:2){
+for(run_pars_index in 10:10){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 
@@ -62,8 +65,22 @@ for(run_pars_index in 2:2){
 	source("code/fit_posteriors_preamble.R")
 	source("code/make_figures.R")
 
-	source("code/indiv_analysis_revised.R")
+	# source("code/indiv_analysis_revised.R")
 }
+
+
+# for(run_pars_index in 2:2){
+
+# 	run_pars <- run_pars_list[[run_pars_index]]
+
+# 	load(paste0("output/run_pars_adj_",run_pars_index,"/indiv_data.RData"))
+# 	load(paste0("output/run_pars_adj_",run_pars_index,"/ct_fit.RData"))
+
+# 	source("code/fit_posteriors_preamble.R")
+# 	source("code/make_figures.R")
+
+# 	source("code/indiv_analysis_revised.R")
+# }
 
 # =============================================================================
 # Post-hoc figure generation
