@@ -65,9 +65,8 @@ for(run_pars_index in 10:10){
 	source("code/fit_posteriors_preamble.R")
 	source("code/make_figures.R")
 
-	# source("code/indiv_analysis_revised.R")
+	source("code/spearman.R")
 }
-
 
 # for(run_pars_index in 2:2){
 
