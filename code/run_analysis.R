@@ -32,7 +32,7 @@ source("code/set_run_pars.R")
 # Run the analysis
 # =============================================================================
 
-for(run_pars_index in 11:11){
+for(run_pars_index in 16:17){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 
@@ -55,7 +55,7 @@ for(run_pars_index in 11:11){
 # Individual-level comparisons (Spearman correlations)
 # =============================================================================
 
-for(run_pars_index in 10:10){
+for(run_pars_index in 14:14){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 
@@ -72,7 +72,7 @@ for(run_pars_index in 10:10){
 # Post-hoc figure generation
 # =============================================================================
 
-for(run_pars_index in 10:10){
+for(run_pars_index in 14:14){
 
 	run_pars <- run_pars_list[[run_pars_index]]
 

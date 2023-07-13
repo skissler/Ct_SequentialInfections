@@ -20,7 +20,8 @@ ct_fit <- sampling(ct_model,
 		wr_midpoint=prior_pars$wr_midpoint,
 		sigma_prior=prior_pars$sigma_prior,
 		lambda=prior_pars$lambda,
-		fpmean=prior_pars$fpmean), 
+		fpmean=prior_pars$fpmean,
+		priorsd=prior_pars$priorsd), 
 	iter=1000, chains=4) # iter=2000
 # , control = list(adapt_delta=0.85)
 # , control = list(adapt_delta=0.99)

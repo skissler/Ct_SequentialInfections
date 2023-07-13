@@ -77,6 +77,7 @@ prior_pars <- list(
 	category=catlist,
 	max_category=max(catlist),
 	adjust=adjmat,
-	max_adjust=max(max(adjmat))
+	max_adjust=max(max(adjmat)),
+	priorsd=run_pars$priorsd
 )	
 

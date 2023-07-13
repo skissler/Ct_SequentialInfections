@@ -32,7 +32,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		), 
 	# 2) Measure raw differences between variants: 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -73,7 +74,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		), 
 	# 3) Measure differences in omicron trajectories by prior variant: 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -111,7 +113,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 4) Measure differences in 2nd omicron infections vs other omicrons: 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -172,7 +175,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 5) Measure differences in 2nd omicron infections vs first omicron infections in boosted and unboosted individuals (not subset to the multiply-infected individuals): 
 	list(excluded_rows=((ct_dat_refined %>% 
@@ -214,7 +218,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 6) Measure differences between 1st and 2nd infections, stratifying by vaccination status (first infection) or presence of an intervening vaccine dose (second infection) 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -255,7 +260,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 7) Measure raw differences between 1st and 2nd infections, restricting to the people with two well-documented infections
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -335,7 +341,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 8) Measure differences in second infection kinetics stratified by the first infection lineage, in people with two well-documented infections. 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -424,7 +431,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 9) Measure differences in 2nd infections by vaccination status, in people with two well-documented infections 
 		list(excluded_rows=(ct_dat_refined %>% 
@@ -498,7 +506,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 10) Measure raw differences between 1st and 2nd infections, restricting to the people with two well-documented infections, but allowing the others to inform the adjustment parameters 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -584,7 +593,8 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
 		),
 	# 11) Measure raw differences between 1st and 2nd infections, but now adjust for everything 
 	list(excluded_rows=(ct_dat_refined %>% 
@@ -664,7 +674,500 @@ run_pars_list <- list(
 		wr_midpoint=12,
 		sigma_prior=c(0,0.5),
 		lambda=0.01,
-		fpmean=1/log(10)
+		fpmean=1/log(10),
+		priorsd=0.25
+		),
+	# 12) Measure differences in second infection kinetics stratified by the first infection lineage, in people with two well-documented infections, with wider priors
+	list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum==2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+			(ct_dat_refined %>% 
+				filter(WD2==0) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & PrevLineageBroad%in%c("Other","None")) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & PrevLineageBroad=="Alpha") %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & PrevLineageBroad=="Delta") %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & PrevLineageBroad%in%c("BA.1","BA.2")) %>% 
+				pull(RowID))
+			), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				),
+			# Adjust by vaccination status: 
+			list(
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus)) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("No well-documented prior infection", "Other/None","Alpha","Delta","BA.1/BA.2"), 
+		analysis_title="Lineage of first infection", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5"),
+			c("Unvaccinated/Unboosted","Unvaccinated/Unknonwn booster","Vaccinated/Unboosted","Vaccinated/Boosted","Vaccinated/Unknown booster","Not reported")), 
+		adjustment_title=c("age group","variant","vax status"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
+		),
+	# 13) Measure differences in 2nd infections by vaccination status, in people with two well-documented infections, with wider priors 
+		list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum==2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+				(ct_dat_refined %>% 
+					filter(WD2==0) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(WD2==1 & (VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus))) %>% 
+					pull(RowID))
+				), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("Unpaired second infections", "Not vaccinated/Not boosted", "Not vaccinated/Boost unknown", "Vaccinated/Not boosted", "Vaccinated/Boosted", "Vaccinated/Boost unknown","Unknown"), 
+		analysis_title="Vaccination status", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5")
+			), 
+		adjustment_title=c("age group","variant"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
+		),
+	# 14) Measure raw differences between 1st and 2nd infections, restricting to the people with two well-documented infections, but allowing the others to inform the adjustment parameters, with wider priors 
+	list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum<=2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+			(ct_dat_refined %>% 
+				filter(WD2==0 & InfNum==1) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==0 & InfNum==2) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & InfNum==1) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(WD2==1 & InfNum==2) %>% 
+				pull(RowID))
+			), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				),
+			# Adjust by vaccination status: 
+			list(
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus)) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("First Infection, baseline","Second Infection, baseline","First Infection, with two well-documented","Second Infection, with two well-documented"), 
+		analysis_title="first vs. second infection", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5"),
+			c("Unvaccinated/Unboosted","Unvaccinated/Unknonwn booster","Vaccinated/Unboosted","Vaccinated/Boosted","Vaccinated/Unknown booster","Not reported")), 
+		adjustment_title=c("age group","variant","vax status"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
+		), 
+	# 15) Measure raw differences between 1st and 2nd infections, but now adjust for everything, with wider priors 
+	list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum<=2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+			(ct_dat_refined %>% 
+				filter(InfNum==1) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(InfNum==2) %>% 
+				pull(RowID))
+			), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				),
+			# Adjust by vaccination status: 
+			list(
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus)) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("First Infection","Second Infection"), 
+		analysis_title="first vs. second infection, overall", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5"),
+			c("Unvaccinated/Unboosted","Unvaccinated/Unknonwn booster","Vaccinated/Unboosted","Vaccinated/Boosted","Vaccinated/Unknown booster","Not reported")), 
+		adjustment_title=c("age group","variant","vax status"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
+		),
+		# 16) Measure differences in 2nd infections by vaccination status, in EVERYONE with two infections, with wider priors 
+		list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum==2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter((VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus))) %>% 
+					pull(RowID))
+				), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("Not vaccinated/Not boosted", "Not vaccinated/Boost unknown", "Vaccinated/Not boosted", "Vaccinated/Boosted", "Vaccinated/Boost unknown","Unknown"), 
+		analysis_title="Vaccination status", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5")
+			), 
+		adjustment_title=c("age group","variant"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
+		),
+	# 17) Measure differences in second infection kinetics stratified by the first infection lineage, in EVERYONE, with wider priors
+	list(excluded_rows=(ct_dat_refined %>% 
+			filter(!(InfNum==2)) %>% 
+			pull(RowID)),
+		analysis_rows=list(
+			(ct_dat_refined %>% 
+				filter(PrevLineageBroad%in%c("Other","None")) %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(PrevLineageBroad=="Alpha") %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(PrevLineageBroad=="Delta") %>% 
+				pull(RowID)),
+			(ct_dat_refined %>% 
+				filter(PrevLineageBroad%in%c("BA.1","BA.2")) %>% 
+				pull(RowID))
+			), 
+		adjustment_rows=list(
+			# Adjust by age group:
+			list(
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[0,30)") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[30,50)" | is.na(AgeGrp)) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(AgeGrp=="[50,100)") %>% 
+					pull(RowID))
+				),
+			# Adjust by variant: 
+			list(
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("Other","None")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Alpha") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad=="Delta") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.1","BA.2")) %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(LineageBroad%in%c("BA.4","BA.5")) %>% 
+					pull(RowID))
+				),
+			# Adjust by vaccination status: 
+			list(
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Boosted") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Fully Vaccinated" & BoosterStatus=="Not Reported") %>% 
+					pull(RowID)),
+				(ct_dat_refined %>% 
+					filter(VaccinationStatus=="Not Reported" | is.na(VaccinationStatus) | is.na(BoosterStatus)) %>% 
+					pull(RowID))
+				)
+				), # NULL
+		analysis_names=c("Other/None","Alpha","Delta","BA.1/BA.2"), 
+		analysis_title="Lineage of first infection", 
+		adjustment_names=list(
+			c("0-29","30-49","50+"),
+			c("Other/None","Alpha","Delta","BA.1/BA.2","BA.4/BA.5"),
+			c("Unvaccinated/Unboosted","Unvaccinated/Unknonwn booster","Vaccinated/Unboosted","Vaccinated/Boosted","Vaccinated/Unknown booster","Not reported")), 
+		adjustment_title=c("age group","variant","vax status"), 
+		tp_prior=c(0,2),
+		dp_midpoint=20,
+		wp_midpoint=5,
+		wr_midpoint=12,
+		sigma_prior=c(0,1),
+		lambda=0.01,
+		fpmean=1/log(10),
+		priorsd=1
 		)
-	)
+)
 

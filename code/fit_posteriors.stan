@@ -15,8 +15,8 @@ data{
   int<lower=0> n_id;       // Number of infections
   real<lower=0> lod;        // Limit of detection
   int<lower=0> id[N];       // Vector marking which datum belongs to which id
-  int<lower=0> category[n_id];  // Immune categories
-  int<lower=0> max_category;     // Highest immune category
+  int<lower=0> category[n_id];  // Analysis categories
+  int<lower=0> max_category;     // Highest analysis category
   int<lower=0> n_adj;        // Number of adjustment variables 
   int<lower=0> adjust[n_id,n_adj];  // Adjustment categories
   int<lower=0> max_adjust;     // Highest adjustment category, across all adjustment variables
@@ -29,6 +29,7 @@ data{
   real sigma_prior[2];      // Prior observation noise Cauchy scale
   real<lower=0, upper=1> lambda; // Mixture probability (~1-sensitivity)
   real<lower=0> fpmean;     // False positive mean Ct
+  real<lower=0> priorsd;    // Standard deviation for the lognormal priors
 }
 
 
@@ -128,19 +129,16 @@ transformed parameters{
 
     dp[i] = exp(log_dp_mean + 
       log_dpadj[category[i]] + 
-      // log_dpadj_adjust[adjust[i]] + 
       dpadj_add + 
       log_dp_sd*dp_raw[i])*dp_midpoint;
 
     wp[i] = exp(log_wp_mean + 
       log_wpadj[category[i]] + 
-      // log_wpadj_adjust[adjust[i]] + 
       wpadj_add + 
       log_wp_sd*wp_raw[i])*wp_midpoint;
 
     wr[i] = exp(log_wr_mean + 
       log_wradj[category[i]] + 
-      // log_wradj_adjust[adjust[i]] + 
       wradj_add + 
       log_wr_sd*wr_raw[i])*wr_midpoint;
 
@@ -160,28 +158,27 @@ model{
 
   tp ~ normal(tp_prior[1], tp_prior[2]);
 
-  log_dp_mean ~ normal(0, 0.25); // hierarchical mean
-  log_dp_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
-  log_dpadj_cat_raw ~ normal(0, 0.25); 
+  log_dp_mean ~ normal(0, priorsd); // hierarchical mean
+  log_dp_sd ~ normal(0, priorsd) T[0,]; // sd of the individual-level draws
+  log_dpadj_cat_raw ~ normal(0, priorsd); 
   for(indexA in 1:(max_adjust-1)){
-    log_dpadj_adjust_raw[indexA] ~ normal(0, 0.25);   
+    log_dpadj_adjust_raw[indexA] ~ normal(0, priorsd);
   }
-  // log_dpadj_adjust_raw ~ normal(0, 0.25); 
   dp_raw ~ std_normal(); // for generating individual-level guesses 
 
-  log_wp_mean ~ normal(0, 0.25); // hierarchical mean
-  log_wp_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
-  log_wpadj_cat_raw ~ normal(0, 0.25); 
+  log_wp_mean ~ normal(0, priorsd); // hierarchical mean
+  log_wp_sd ~ normal(0, priorsd) T[0,]; // sd of the individual-level draws
+  log_wpadj_cat_raw ~ normal(0, priorsd); 
   for(indexA in 1:(max_adjust-1)){
-    log_wpadj_adjust_raw[indexA] ~ normal(0, 0.25); 
+    log_wpadj_adjust_raw[indexA] ~ normal(0, priorsd); 
   }
   wp_raw ~ std_normal(); // for generating individual-level guesses
 
-  log_wr_mean ~ normal(0, 0.25); // hierarchical mean
-  log_wr_sd ~ normal(0, 0.25) T[0,]; // sd of the individual-level draws
-  log_wradj_cat_raw ~ normal(0, 0.25); 
+  log_wr_mean ~ normal(0, priorsd); // hierarchical mean
+  log_wr_sd ~ normal(0, priorsd) T[0,]; // sd of the individual-level draws
+  log_wradj_cat_raw ~ normal(0, priorsd); 
   for(indexA in 1:(max_adjust-1)){
-    log_wradj_adjust_raw[indexA] ~ normal(0, 0.25); 
+    log_wradj_adjust_raw[indexA] ~ normal(0, priorsd); 
   }
   wr_raw ~ std_normal(); // for generating individual-level guesses
 
